@@ -1,0 +1,45 @@
+
+######SWEED analysis the selective sweep regions#######
+/home/wangnan/bin/sweed-master/SweeD -name 43 -input /work/43_sjg.SNP.beagle.vcf -grid 100000
+
+
+#######Admixtools for F3 test#######
+step1: transformed
+plink --allow-extra-chr --out myplink_test --recode --vcf Gpan.prune.in.vcf
+step2: converted
+convertf -p transfer.conf
+####config.file
+genotypename: myplink_test.ped 
+snpname: myplink_test.map # or example.map, either works 
+indivname: myplink_test.ped # or example.ped, either works 
+outputformat: EIGENSTRAT 
+genotypeoutname: example.eigenstratgeno 
+snpoutname: example.snp 
+indivoutname: example.ind 
+familynames: NO
+
+
+#######consensus trees#######
+cat   *.tree   >  merge.tree
+PHYLIPNEW-3.69.650/bin/fconsense   -intreefile   merge.tree -outfile out  -treeprint Y
+perl  ./bin/percentageboostrapTree.pl    merge.treefile    NN    Final_boostrap.tre
+
+
+#######ROHs analysis#######
+plink --bfile S_S --homozyg --homozyg-density 10000 --homozyg-gap 10000 --homozyg-kb 1000 --homozyg-snp 10 --homozyg-window-het 3 --homozyg-window-missing 10 --homozyg-window-snp 20 --homozyg-window-threshold 0.05 --out S_S_MB --allow-extra-chr --const-fid
+
+#######IBD analysis#######
+plink --noweb --file file --genome --allow-extra-chr --const-fid 
+
+#######IBS caculate#######
+plink --noweb --file file --cluster --matrix --allow-extra-chr --const-fid
+###R studio：
+m <- as.matrix(read.table("plink.mibs"))
+mds <- cmdscale(as.dist(1-m))
+k <- c( rep("green",45) , rep("blue",44) )
+plot(mds,pch=20,col=k)
+legend("topleft", pch = 20, col = c("green", "blue"))
+
+
+#######caculated population rho#######
+pyrho make_table -n 86 -N 100 --mu 2.2e-8 --logfile . --outfile sjg_n_86_N_100_2021-4-4_lookuptable.hdf --approx --numthreads 30 --smcpp_file merge.allchr.csv --decimate_rel_tol 0.1
