@@ -1,0 +1,68 @@
+//SLiM input file
+initialize() {
+ defineConstant("dominance", 0); //recessive = 0; additive = 0.5; 
+ defineConstant("n", 10); //scaling factor
+ initializeMutationRate(2.2e-8);
+ initializeTreeSeq();
+ //nonsynonymous -- assumed neutral here
+ initializeMutationType("m1", dominance, "g", -0.01314833*n, 0.186);
+ //synonymous -- assumed neutral here
+ initializeMutationType("m2", 0.5, "f", 0.0);
+ //noncoding -- assumed neutral here
+ initializeMutationType("m3", 0.5, "f", 0.0);
+ //genomic element: exon and uses a mixture of syn and nonsyn at a 1:2.31 ratio.
+ initializeGenomicElementType("g1", c(m2,m1), c(1.0,2.31));
+ //genomic element: intron
+ initializeGenomicElementType("g2", c(m3), c(1.0));
+ //genomic element: intergenic
+ initializeGenomicElementType("g3", c(m3), c(1.0));
+ // Generate random genes along an approximately 1000000-base chromosome
+ base = 0;
+ while (base < 1000000) {
+  // make a non-coding region
+  nc_length = rdunif(1, 100, 5000);
+  initializeGenomicElement(g3, base, base + nc_length - 1);
+  base = base + nc_length;// make first exon
+  ex_length = asInteger(rlnorm(1, log(50), log(2))) + 1;
+  initializeGenomicElement(g1, base, base + ex_length - 1);
+  base = base + ex_length;
+  // make additional intron-exon pairs
+  do
+  {
+   in_length = asInteger(rlnorm(1, log(100), log(1.5))) + 10; initializeGenomicElement(g2, base, base + in_length - 1); base = base + in_length;
+   ex_length = asInteger(rlnorm(1, log(50), log(2))) + 1; initializeGenomicElement(g1, base, base + ex_length - 1); base = base + ex_length;
+  }
+  while (runif(1) < 0.8); // 20% probability of stopping 
+ }
+ // final non-coding region
+ nc_length = rdunif(1, 100, 5000);
+ initializeGenomicElement(g3, base, base + nc_length - 1);// single recombination rate
+ initializeRecombinationRate(1e-7);//changed2021-9-7,before,1e-8
+}
+
+//burn in
+1 early() {
+ defineConstant("simnum", getSeed());
+ setSeed(getSeed() + 27126);
+ sim.addSubpop("p1", asInteger(10000/n));
+ m1.convertToSubstitution = T;
+}
+10000 early() { // after burn-in, split populations into two: p1 and p2
+ sim.addSubpopSplit("p2", asInteger(0.25*10000/n), p1);
+ p2.setSubpopulationSize(asInteger(0.25*10000/n));
+ sim.addSubpopSplit("p3", asInteger(0.25*10000/n), p1);
+ p3.setSubpopulationSize(asInteger(0.25*10000/n));
+ p3.setCloningRate(0);//set 0.98 or 0
+ p3.setSelfingRate(0);//set 0 or 0.98
+ // this also isnt necessary, but sets the migration rates to 0
+}
+
+12000 late() {
+g = p1.sampleIndividuals(100).genomes;
+g.outputVCF(simplifyNucleotides=T);
+g = p2.sampleIndividuals(100).genomes;
+g.outputVCF(simplifyNucleotides=T);
+g = p3.sampleIndividuals(100).genomes;
+g.outputVCF(simplifyNucleotides=T);
+}
+12000 { sim.simulationFinished(); }
