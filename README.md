@@ -40,3 +40,9 @@ The apomictic individual ‘DB’ heterozygous peaks in chr1
 
 DR01_chr1.het
 The sexual reproducing individual ‘DR01’ heterozygous peaks in chr1
+
+---
+
+The scripts, for instance, SSMs could find in https://github.com/wangnan9394/apomixis_parallel_evolution
+
+The docker ENV (version) were listed in used_docker.list
