@@ -1,0 +1,18 @@
+step1.transformed to Geno file
+python /home/wangnan/bin/genomics_general-master/VCF_processing/parseVCF.py -i out1.txt.merge.vcf  >out1.txt.merge.geno
+
+step2.prepared the pops.txt
+
+step3.analysis ABBA-BABA (introgression)
+python /home/wangnan/bin/genomics_general-master/ABBABABAwindows.py -f phased -w 10000 -m 10 -s 5000 -P1 popC -P2 popB -P3 popA -O root -T 1 --minData 0.5 --popsFile pops.txt --writeFailedWindows -g 9-6.geno -o output.csv 
+
+step4.simulated vcf to tree
+./vcf2phylip-master/vcf2phylip.py -i 9-6.vcf -f
+fasttree -nt -gtr 9-6.min4.fasta>  fasttree.nwk
+
+step5.another tree including heterouzygous sites information
+/root/VCF2Dis-master/bin/VCF2Dis -i 9-6.vcf -o 9-6.mis
+fastme -i 9-6.mis -m NJ
+
+step5.genetic diversity fst dxy
+python /home/wangnan/bin/genomics_general-master/popgenWindows.py -w 10000 -m 10 -g 9-6.geno -o output.csv.gz -f phased -T 5 -p root -p popA -p popB -p popC --popsFile pops.txt
