@@ -1,5 +1,5 @@
 # conservation_genomics
-
+# Related paper:Conservation genomics insights into the spontaneous integration of multiple reproductive strategies in an endangered citrus relative
 ## Description
 ---
 Using citrus (wild kumquat and cultivate kumquat populations) to study conservation genomics, especially the geogracial location, introgression and the mating systems.
